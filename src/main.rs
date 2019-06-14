@@ -19,6 +19,8 @@ fn communicate(addr: SocketAddr) {
             stream.write(&VERSION_BYTES).unwrap();
             println!("VERSION Sent!");
 
+            let mut satoshi_sum = 0;
+
             let mut read_buffer = [0; 1500];
             let mut data = Vec::new();
             loop {
@@ -61,10 +63,11 @@ fn communicate(addr: SocketAddr) {
                         }
                         NetworkMessage::Block(block) => {
                             println!("Get block {}", block.bitcoin_hash());
-                            block
-                                .txdata
-                                .iter()
-                                .for_each(|tx| println!("Tx ouput: {:?}", tx.output[0].value));
+                            block.txdata.iter().for_each(|tx| {
+                                println!("Tx ouput: {:?}", tx.output[0].value);
+                                satoshi_sum += tx.output[0].value;
+                            });
+                            println!("satoshi owns: {}", satoshi_sum / 100000000);
                         }
                         NetworkMessage::Version(version) => {
                             stream.write(&VERACK_BYTES).unwrap();
