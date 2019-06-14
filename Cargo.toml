@@ -7,3 +7,4 @@ edition = "2018"
 [dependencies]
 sha2 = "0.8.0"
 bitcoin = "0.18.0"
+bitcoin_hashes = "0.3.2"

@@ -1,14 +1,14 @@
 use sha2::{Digest, Sha256, Sha512};
 
-pub const seeds: [&str; 8] = [
+pub const SEEDS: [&str; 8] = [
     "seed.bitcoin.sipa.be:8333",
     "dnsseed.bluematt.me:8333",
-    "dnsseed.bitcoin.dashjr.org",
-    "seed.bitcoinstats.com",
-    "seed.bitcoin.jonasschnelli.ch",
-    "seed.btc.petertodd.org",
-    "seed.bitcoin.sprovoost.nl",
-    "dnsseed.emzy.de",
+    "dnsseed.bitcoin.dashjr.org:8333",
+    "seed.bitcoinstats.com:8333",
+    "seed.bitcoin.jonasschnelli.ch:8333",
+    "seed.btc.petertodd.org:8333",
+    "seed.bitcoin.sprovoost.nl:8333",
+    "dnsseed.emzy.de:8333",
 ];
 
 pub const VERSION_BYTES: [u8; 134] = [
@@ -31,6 +31,11 @@ pub const VERACK_BYTES: [u8; 32] = [
 pub const GENESIS_HASH: [u8; 32] = [
     0x6f, 0xe2, 0x8c, 0x0a, 0xb6, 0xf1, 0xb3, 0x72, 0xc1, 0xa6, 0xa2, 0x46, 0xae, 0x63, 0xf7, 0x4f,
     0x93, 0x1e, 0x83, 0x65, 0xe1, 0x5a, 0x08, 0x9c, 0x68, 0xd6, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00,
+];
+
+pub const FILLER: [u8; 32] = [
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
 pub fn pretty_dump(buffer: &[u8]) -> () {
@@ -66,10 +71,41 @@ pub fn serialize_u32(n: u32) -> [u8; 4] {
     return [b0, b1, b2, b3];
 }
 
-pub fn combine_u32(data: [u8; 4]) -> u32 {
+pub fn combine_u32(data: &[u8]) -> u32 {
     (((data[0] as u32) << 0)
         + ((data[1] as u32) << 8)
         + ((data[2] as u32) << 16)
         + ((data[3] as u32) << 24))
         .into()
+}
+
+fn make_message_bytes(command: &[u8], payload: &[u8]) -> Vec<u8> {
+    let mut result = Vec::new();
+    result.extend_from_slice(&[0xf9, 0xbe, 0xb4, 0xd9]);
+    result.extend_from_slice(command);
+    result.extend_from_slice(&serialize_u32(payload.len() as u32));
+    result.extend_from_slice(&dsha256(payload)[0..4]);
+    result.extend_from_slice(payload);
+    return result;
+}
+
+pub fn make_getheaders_bytes(target: &[u8]) -> Vec<u8> {
+    let command = "getheaders\0\0".as_bytes();
+    let mut payload = Vec::new();
+    payload.extend_from_slice(&[0x7f, 0x11, 0x01, 0x00]);
+    payload.push(0x01);
+    payload.extend_from_slice(target);
+    payload.extend_from_slice(&FILLER);
+    let bytes = make_message_bytes(&command, &payload);
+    return bytes;
+}
+
+pub fn make_getdata_bytes(target: &[u8; 32]) -> Vec<u8> {
+    let command = "getdata\0\0\0\0\0".as_bytes();
+    let mut payload = Vec::new();
+    payload.push(0x01);
+    payload.extend_from_slice(&[0x02, 0, 0, 0]);
+    payload.extend_from_slice(target);
+    let bytes = make_message_bytes(&command, &payload);
+    return bytes;
 }
