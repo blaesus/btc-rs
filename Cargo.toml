@@ -1,0 +1,9 @@
+[package]
+name = "btc-rs"
+version = "0.1.0"
+authors = ["Andy Shu <shu@immux.com>"]
+edition = "2018"
+
+[dependencies]
+sha2 = "0.8.0"
+bitcoin = "0.18.0"
