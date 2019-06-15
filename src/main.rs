@@ -67,7 +67,11 @@ fn communicate(addr: SocketAddr) {
                                 println!("Tx ouput: {:?}", tx.output[0].value);
                                 satoshi_sum += tx.output[0].value;
                             });
-                            println!("satoshi owns: {}", satoshi_sum / 100000000);
+                            println!(
+                                "satoshi owns: {} as of {}",
+                                satoshi_sum / 100000000,
+                                block.header.time,
+                            );
                         }
                         NetworkMessage::Version(version) => {
                             stream.write(&VERACK_BYTES).unwrap();
